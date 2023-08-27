@@ -1,0 +1,14 @@
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+metricbeat.modules:
+- module: system
+  metricsets:
+    - cpu
+    - memory
+  enabled: true
+  period: 10s
+
+output.elasticsearch:
+  hosts: ["es01:9200"]

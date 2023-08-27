@@ -1,0 +1,92 @@
+
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+      - ./synonym.txt:/usr/share/elasticsearch/config/synonyms/synonym.txt
+      - ./stop_words.txt:/usr/share/elasticsearch/config/stop_words.txt
+    environment:
+      - node.name=es01
+      - cluster.name=blackeveryday
+      - discovery.type=single-node  
+      # - cluster.initial_master_nodes=es01,es02
+      # - discovery.seed_hosts=es02
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+    networks:
+      - elastic
+    ports:
+      - 9200:9200
+    restart: always
+
+
+  # es02:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+  #   volumes:
+  #     - esdata02:/usr/share/elasticsearch/data
+  #     - ./synonym.txt:/usr/share/elasticsearch/config/synonyms/synonym.txt
+  #     - ./stop_words.txt:/usr/share/elasticsearch/config/stop_words.txt
+  #   environment:
+  #     - node.name=es02
+  #     - cluster.name=blackeveryday
+  #     - cluster.initial_master_nodes=es01,es02
+  #     - discovery.seed_hosts=es01
+  #     - xpack.security.enabled=false
+  #     - ES_JAVA_OPTS=-Xms4g -Xmx4g
+  #   networks:
+  #     - elastic
+  #   restart: always
+  #   depends_on:
+  #     - es01
+
+  kib01:
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    environment:
+      - "ELASTICSEARCH_HOSTS=http://es01:9200"
+    ports:
+      - "5601:5601"
+    networks:
+      - elastic
+    container_name: kib01
+    restart: always
+    depends_on:
+      - es01
+
+  log01:
+    image: docker.elastic.co/logstash/logstash:8.9.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./postgresql-42.6.0.jar:/usr/share/logstash/postgres_driver/postgresql-42.6.0.jar
+    environment:
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+    networks:
+      - elastic
+    container_name: log01
+    restart: always
+    depends_on:
+      - es01
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.9.0
+    volumes:
+      - ./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml
+      - ./modules.d:/usr/share/metricbeat/modules.d 
+
+    networks:
+      - elastic
+    depends_on:
+      - es01
+
+
+networks:
+  elastic:
+    driver: bridge
+
+volumes:
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+
