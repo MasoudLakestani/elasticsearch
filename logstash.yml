@@ -1,11 +1,4 @@
-# http.host: "0.0.0.0"
-# path.config: /usr/share/logstash/pipeline
-xpack.monitoring.enabled: true
-xpack.monitoring.elasticsearch.hosts: ["http://es01:9200"]
-# log.level: error
-
-# xpack.monitoring.elasticsearch.username: elastic
-# xpack.monitoring.elasticsearch.password: ${ELASTIC_PASSWORD}
-# xpack.monitoring.elasticsearch.password: 13680129a
-# xpack.management.elasticsearch.password: "13680129a"
-# xpack.monitoring.elasticsearch.ssl.certificate_authority: "/usr/share/logstash/config/certs/ca/ca.crt"
+xpack.monitoring.enabled: false
+xpack.monitoring.elasticsearch.hosts: ["https://es01:9200"]
+http.host: "0.0.0.0"
+http.port: 9600

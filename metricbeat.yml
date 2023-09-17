@@ -2,13 +2,97 @@ metricbeat.config.modules:
   path: ${path.config}/modules.d/*.yml
   reload.enabled: false
 
+metricbeat.max_start_delay: 40s
+setup.ilm.enabled: true
+
+# Commented out sections for future reference
 metricbeat.modules:
-- module: system
-  metricsets:
-    - cpu
-    - memory
-  enabled: true
-  period: 10s
+  - module: system
+    metricsets:
+    - cpu             # CPU usage
+    - load            # CPU load averages
+    - memory          # Memory usage
+    - network         # Network IO
+    - process         # Per process metrics
+    - process_summary # Process summary
+    - uptime          # System Uptime
+    - socket_summary  # Socket summary
+    - core           # Per CPU core usage
+    - diskio         # Disk IO
+    - filesystem     # File system usage for each mountpoint
+    - fsstat         # File system summary metrics
+    - raid           # Raid
+    - socket         # Sockets and connection info (linux only)
+    # - service
+    enabled: true
+    period: 10s
+    processes: ['.*']
+    cpu.metrics: ["percentages", "normalized_percentages"]
+
+  - module: elasticsearch
+    metricsets:
+      - node
+      - node_stats
+      - index
+      - index_recovery
+      - index_summary
+      - ingest_pipeline
+      - shard
+      - ml_job
+    xpack.enabled: true
+    period: 10s
+    hosts: https://es01:9200
+    ssl.certificate_authorities: "certs/ca/ca.crt"
+    ssl.certificate: "certs/es01/es01.crt"
+    ssl.key: "certs/es01/es01.key"
+    username: elastic
+    password: M@cadamia2023
+    ssl.enabled: true
+
+  - module: logstash
+    metricsets: ["node", "node_stats"]
+    xpack.enabled: true
+    enabled: true
+    period: 10s
+    hosts: ["log01:9600"]
+
+  - module: postgresql
+    enabled: true
+    metricsets:
+      - database
+      - bgwriter
+      - activity
+    period: 10s
+    hosts: ["postgres://78.110.122.137:5432/blackeveryday?sslmode=disable"]
+    username: monitor
+    password: M@cadamia@2023
+
+  - module: docker
+    metricsets:
+      - "container"
+      - "cpu"
+      - "diskio"
+      - "healthcheck"
+      - "info"
+      - "image"
+      - "memory"
+      - "network"
+    hosts: ["unix:///var/run/docker.sock"]
+    period: 10s
+    enabled: true
 
 output.elasticsearch:
-  hosts: ["es01:9200"]
+  hosts: https://es01:9200
+  username: elastic
+  password: M@cadamia2023
+  ssl:
+    certificate: "certs/es01/es01.crt"
+    certificate_authorities: "certs/ca/ca.crt"
+    key: "certs/es01/es01.key"
+
+setup.kibana:
+  host: "kib01:5601"
+  username: elastic
+  password: M@cadamia2023
+  ssl.enabled: false
+setup.dashboards.enabled: true
